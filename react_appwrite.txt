@@ -1,0 +1,43 @@
+Documentation: 
+React+Appwrite
+
+
+Requirements:
+
+@reduxjs/toolkit 
+react-redux 
+react-router-dom
+appwrite
+@tinymce/tinymce-react
+html-react-parser
+react-hook-form
+
+
+Flow:
+
+Envr Variables
+Create database-> collection -> attributes-> indexes -> bucket(images)
+Conf
+appwrite
+	auth.js (docs)
+	config.js 
+store / (redux)
+ 	store.js
+	authSlice.js
+
+components
+App.js
+provider in index.js
+pages/
+
+compoents : hEader , footer, LogoutBtn, common btn , input.jsx (forward ref)
+select.jsx
+postcard.jsx
+login.jsx (react-hook form 18.40)
+signup.jsx
+authLayout
+RTE.jsx
+postform/ postform.jsx
+pages/
+index.js (routing)
+cors error
