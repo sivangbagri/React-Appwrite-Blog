@@ -24,4 +24,4 @@ validation.
 
 
 
-**For collaboration / ideas : [Contact](sivangbagri@gmail.com)**
+**For collaboration / ideas : [Contact](https://www.linkedin.com/in/shivang-bagri/)**
