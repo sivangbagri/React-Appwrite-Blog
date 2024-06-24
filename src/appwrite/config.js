@@ -25,7 +25,7 @@ export class Service {
     try {
       return await this.databases.createDocument(
         conf.appWriteDatabaseID,
-        conf.appWriteCollectionID,
+        conf.appWriteBlogsCollectionID,
         slug,
         {
           title,
@@ -38,18 +38,64 @@ export class Service {
             year: "numeric",
             month: "long",
             day: "numeric",
-          } ).format(new Date()),
+          }).format(new Date()),
         }
       );
     } catch (error) {
       alert("Appwrite serive :: createPost :: error", error);
     }
   }
+  async createUserData(userID, lineData) {
+    console.log("userID ", userID);
+    console.log("lineData ", lineData);
+    try {
+      const isPresent = await this.databases.getDocument(
+        conf.appWriteDatabaseID,
+        conf.appWriteUsersCollectionID,
+        userID
+      );
+      if (!isPresent) {
+        return await this.databases.createDocument(
+          conf.appWriteDatabaseID,
+          conf.appWriteUsersCollectionID,
+          userID,
+          {
+            lines: [JSON.stringify(lineData)],
+          }
+        );
+      } else {
+        console.log("exist : ", isPresent);
+        isPresent.lines.push(JSON.stringify(lineData));
+        const new_lines = isPresent.lines;
+        return await this.databases.updateDocument(
+          conf.appWriteDatabaseID,
+          conf.appWriteUsersCollectionID,
+          userID,
+          {
+            lines: new_lines,
+          }
+        );
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  }
+  async getUserData(userID,attribute) {
+    const doc= await this.databases.getDocument(
+      conf.appWriteDatabaseID,
+      conf.appWriteUsersCollectionID,
+      userID
+    );
+    
+    if(attribute==="lines"){
+      return doc.lines
+    }
+  }
   async updatePost(slug, { title, content, featuredImage, status }) {
     try {
       return await this.databases.updateDocument(
         conf.appWriteDatabaseID,
-        conf.appWriteCollectionID,
+        conf.appWriteBlogsCollectionID,
         slug,
         {
           title,
@@ -66,7 +112,7 @@ export class Service {
     try {
       await this.databases.deleteDocument(
         conf.appWriteDatabaseID,
-        conf.appWriteCollectionID,
+        conf.appWriteBlogsCollectionID,
         slug
       );
       return true;
@@ -80,7 +126,7 @@ export class Service {
     try {
       return await this.databases.getDocument(
         conf.appWriteDatabaseID,
-        conf.appWriteCollectionID,
+        conf.appWriteBlogsCollectionID,
         slug
       );
     } catch (error) {
@@ -94,7 +140,7 @@ export class Service {
     try {
       return await this.databases.listDocuments(
         conf.appWriteDatabaseID,
-        conf.appWriteCollectionID,
+        conf.appWriteBlogsCollectionID,
         queries
       );
     } catch (error) {

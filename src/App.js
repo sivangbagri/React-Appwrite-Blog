@@ -1,13 +1,14 @@
 import logo from "./logo.svg";
 import "./App.css";
 import { useEffect, useState } from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import authService from "./appwrite/auth";
 import { login, logout } from "./store/authSlice";
-import { Footer, Header } from './components'
+import { Footer, Header } from "./components";
 import { Outlet } from "react-router-dom";
 import Notes from "./components/Notes";
 function App() {
+  const isOpen = useSelector((state) => state.show.showLines);
   const [loading, setLoading] = useState(true);
   const dispatch = useDispatch();
   useEffect(() => {
@@ -26,12 +27,13 @@ function App() {
   return !loading ? (
     <div className="min-h-screen flex flex-wrap content-between bg-[#0c0a09] ">
       <div className="w-full block">
-        <Header/>
-       <Notes/>
+        <Header />
+
+        {isOpen && <Notes />}
         <main>
-          TODO: <Outlet/>
+          TODO: <Outlet />
         </main>
-        <Footer/>
+        <Footer />
       </div>
     </div>
   ) : null;

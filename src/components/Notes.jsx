@@ -3,9 +3,12 @@ import { MdOutlineCancel } from "react-icons/md";
 import { Link, useLocation } from "react-router-dom";
 import appwriteService from "../appwrite/config";
 import { AiOutlineToTop } from "react-icons/ai";
-import { useSelector } from "react-redux";
-// Link
+import { useDispatch, useSelector } from "react-redux";
+import { toggleShow } from "../store/showSlice";
+import authService from "../appwrite/auth";
+
 export default function Notes() {
+  const dispatch = useDispatch();
   const location = useLocation();
   const notesContainerRef = useRef();
   const pathname = location.pathname;
@@ -17,20 +20,28 @@ export default function Notes() {
   const [note, setNote] = useState("");
   const handleForm = async (e) => {
     e.preventDefault();
+    const current_user = await authService.getCurrentUser();
     const blog = await appwriteService.getPost(current_slug);
     if (blog) {
       const featuredImage = appwriteService.getFilePreview(blog.featuredImage);
-      setNotes([
-        ...notes,
-        {
-          title: blog.title,
-          slug: blog.$id,
-          text: note,
-          image: featuredImage,
-          timeAdded: Date.now(),
-          author:blog.author
-        },
-      ]);
+
+      appwriteService.createUserData(current_user.$id, {
+        slug: current_slug,
+        lineData: note,
+      });
+      const xyz=await appwriteService.getUserData(current_user.$id,"lines");
+      console.log("lines extracted  ",xyz);
+      // setNotes([
+      //   ...notes,
+      //   {
+      //     title: blog.title,
+      //     slug: blog.$id,
+      //     text: note,
+      //     image: featuredImage,
+      //     timeAdded: Date.now(),
+      //     author: blog.author,
+      //   },
+      // ]);
 
       setNote("");
     }
@@ -54,13 +65,13 @@ export default function Notes() {
     }
   }
 
-    useEffect(()=>{
-      const saved_notes = JSON.parse(localStorage.getItem("notes"))
-      if(saved_notes && saved_notes.length>0){
-          setNotes(saved_notes);
-      }
-
-    },[])
+  useEffect(() => {
+    const saved_notes = JSON.parse(localStorage.getItem("notes"));
+    if (saved_notes && saved_notes.length > 0) {
+      setNotes(saved_notes);
+    }
+    console.log("yes");
+  }, []);
   useEffect(() => {
     scrollToBottom();
 
@@ -99,6 +110,9 @@ export default function Notes() {
 
             <button
               type="button"
+              onClick={() => {
+                dispatch(toggleShow());
+              }}
               style={{ color: "rgb(153,171,180)", borderRadius: "50%" }}
               className="text-2xl p-3 hover:drop-shadow-xl hover:bg-light-gray"
             >
@@ -106,9 +120,9 @@ export default function Notes() {
             </button>
           </div>
           <div>
-            {notes?.map((item) => {
+            {notes?.map((item, index) => {
               return (
-                <Link to={`/post/${item.slug}`} key={Date.now()}>
+                <Link to={`/post/${item.slug}`} key={index}>
                   <div className="hover:drop-shadow-lg p-2 my-2 bg-white h-auto overflow-y-scroll flex drop-shadow-md rounded-md ">
                     <div className="  w-auto mr-2  ">
                       <img
@@ -119,7 +133,10 @@ export default function Notes() {
                     <div className="text-black w-4/5">
                       <div className="flex justify-between">
                         <p className="text-semibold text-sm font-medium flex items-center">
-                          {item.title}  <span className="text-xs font-extralight ml-2">{item.author}</span>
+                          {item.title}{" "}
+                          <span className="text-xs font-extralight ml-2">
+                            {item.author}
+                          </span>
                         </p>
                       </div>
                       <p
