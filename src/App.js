@@ -6,6 +6,7 @@ import authService from "./appwrite/auth";
 import { login, logout } from "./store/authSlice";
 import { Footer, Header } from './components'
 import { Outlet } from "react-router-dom";
+import Notes from "./components/Notes";
 function App() {
   const [loading, setLoading] = useState(true);
   const dispatch = useDispatch();
@@ -23,9 +24,10 @@ function App() {
   }, []);
   // console.log(process.env.REACT_APP_APPWRITE_URL);
   return !loading ? (
-    <div className="min-h-screen flex flex-wrap content-between bg-black/90">
+    <div className="min-h-screen flex flex-wrap content-between bg-[#0c0a09] ">
       <div className="w-full block">
         <Header/>
+       <Notes/>
         <main>
           TODO: <Outlet/>
         </main>

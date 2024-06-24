@@ -41,12 +41,12 @@ export default function PostForm({ post }) {
             if (file) {
                 const fileId = file.$id;
                 data.featuredImage = fileId;
-                // console.log(userData.$id)
-                const dbPost = await appwriteService.createPost({ ...data, userId: userData.$id });
+                console.log(userData)
+                const dbPost = await appwriteService.createPost({ ...data, userId: userData.$id , author: userData.name });
 
                 if (dbPost) {
                     navigate(`/post/${dbPost.$id}`);
-                }
+                }   
             }
         }
     };

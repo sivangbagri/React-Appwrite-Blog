@@ -13,7 +13,15 @@ export class Service {
     this.databases = new Databases(this.client);
     this.bucket = new Storage(this.client);
   }
-  async createPost({ title, slug, content, featuredImage, status, userId }) {
+  async createPost({
+    title,
+    slug,
+    content,
+    featuredImage,
+    status,
+    userId,
+    author,
+  }) {
     try {
       return await this.databases.createDocument(
         conf.appWriteDatabaseID,
@@ -25,13 +33,19 @@ export class Service {
           featuredImage,
           status,
           userID: userId,
+          author,
+          createdAt: new Intl.DateTimeFormat("en-US", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          } ).format(new Date()),
         }
       );
     } catch (error) {
-      console.log("Appwrite serive :: createPost :: error", error);
+      alert("Appwrite serive :: createPost :: error", error);
     }
   }
-  async updatePost(slug, { title, content, featuredImage, status}) {
+  async updatePost(slug, { title, content, featuredImage, status }) {
     try {
       return await this.databases.updateDocument(
         conf.appWriteDatabaseID,
@@ -62,14 +76,13 @@ export class Service {
     }
   }
   async getPost(slug) {
-    console.log("getpost" ,slug)
+    console.log("getpost", slug);
     try {
       return await this.databases.getDocument(
         conf.appWriteDatabaseID,
         conf.appWriteCollectionID,
         slug
       );
-      
     } catch (error) {
       console.log(error);
       return false;
@@ -84,8 +97,6 @@ export class Service {
         conf.appWriteCollectionID,
         queries
       );
-
-    
     } catch (error) {
       console.log(error);
       return false;

@@ -3,20 +3,21 @@ import { Container, PostCard } from "../components";
 import appwriteService from "../appwrite/config";
 export default function AllPosts() {
   const [posts, setPosts] = useState([]);
- useEffect(()=>{
-  appwriteService.getPosts().then((posts) => {
-    // console.log("posts ",posts)
-    if (posts) {
-      setPosts(posts.documents);
-    }
-  });
+  useEffect(() => {
+    appwriteService.getPosts().then((posts) => {
+      // console.log("posts ",posts[0].$id)
+      if (posts) {
+        setPosts(posts.documents);
+      }
+    });
+  }, []);
 
- },[])
- 
   return (
     <div className="w-full py-3">
       <Container>
-      <h2 className="text-white font-semibold text-2xl mb-3 mx-auto">All Posts</h2>
+        <h2 className="text-white font-semibold text-2xl mb-3 mx-auto">
+          All Posts
+        </h2>
 
         <div className="grid grid-cols-3 gap-4">
           {posts.map((post) => {

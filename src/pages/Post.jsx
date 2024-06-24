@@ -4,6 +4,7 @@ import appwriteService from "../appwrite/config";
 import { Button, Container } from "../components";
 import parse from "html-react-parser";
 import { useSelector } from "react-redux";
+import authService from "../appwrite/auth";
 
 export default function Post() {
   const [post, setPost] = useState(null);
@@ -11,9 +12,7 @@ export default function Post() {
   const navigate = useNavigate();
 
   const userData = useSelector((state) => state.auth.userData);
-
   const isAuthor = post && userData ? post.userId === userData.$id : false;
-
   useEffect(() => {
     if (slug) {
       appwriteService.getPost(slug).then((post) => {
@@ -21,6 +20,8 @@ export default function Post() {
         else navigate("/");
       });
     } else navigate("/");
+    console.log(post)
+    
   }, [slug, navigate]);
 
   const deletePost = () => {
@@ -31,6 +32,8 @@ export default function Post() {
       }
     });
   };
+  
+  
 
   return post ? (
     <div className="py-8">
@@ -39,7 +42,7 @@ export default function Post() {
           <img
             src={appwriteService.getFilePreview(post.featuredImage)}
             alt={post.title}
-            className="rounded-xl"
+            className="rounded-xl size-56"
           />
 
           {isAuthor && (
@@ -55,8 +58,10 @@ export default function Post() {
             </div>
           )}
         </div>
-        <div className="w-full mb-6 text-white" >
+        <div className="w-full mb-6 text-white">
           <h1 className="text-2xl font-bold">{post.title}</h1>
+          <p>Author : {post.author}</p>
+          <p>Craeted At : {post.createdAt}</p>
         </div>
         <div className="browser-css text-white">{parse(post.content)}</div>
       </Container>

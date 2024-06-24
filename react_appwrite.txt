@@ -41,3 +41,24 @@ postform/ postform.jsx
 pages/
 index.js (routing)
 cors error
+
+
+
+
+
+
+
+
+
+
+
+
+
+FX: 
+	Special lines ✅
+	sms signup login -- > auto0 , twilio paid 
+	reading history 
+	sorting
+	read later 
+	incognito mode
+	author -->   ✅
