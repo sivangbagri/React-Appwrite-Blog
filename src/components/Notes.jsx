@@ -15,36 +15,50 @@ export default function Notes() {
   const current_slug = location.pathname.substring(
     pathname.lastIndexOf("/") + 1
   );
-
+  //{"slug":"jee-fienf-enfief-jenfine-fenfe--f","lineData":"cool worling "}
   const [notes, setNotes] = useState([]);
   const [note, setNote] = useState("");
-  const handleForm = async (e) => {
-    e.preventDefault();
-    const current_user = await authService.getCurrentUser();
-    const blog = await appwriteService.getPost(current_slug);
+
+  const getBlogFromSlug = async (slug) => {
+    
+    const blog = await appwriteService.getPost(slug);
+    // console.log("blog== ",blog)
     if (blog) {
       const featuredImage = appwriteService.getFilePreview(blog.featuredImage);
-
-      appwriteService.createUserData(current_user.$id, {
-        slug: current_slug,
-        lineData: note,
-      });
-      const xyz=await appwriteService.getUserData(current_user.$id,"lines");
-      console.log("lines extracted  ",xyz);
-      // setNotes([
-      //   ...notes,
-      //   {
-      //     title: blog.title,
-      //     slug: blog.$id,
-      //     text: note,
-      //     image: featuredImage,
-      //     timeAdded: Date.now(),
-      //     author: blog.author,
-      //   },
-      // ]);
-
-      setNote("");
+      return {
+        title: blog.title,
+        slug: blog.$id,
+        image: featuredImage,
+        timeAdded: Date.now(),
+        author: blog.author,
+      };
     }
+  };
+  const initialiseNotes = async (db_notes) => {
+    const parsed_notes = db_notes.map((item) => JSON.parse(item));
+    // console.log("parsed_notes ", parsed_notes);
+    const notesToSet = [];
+    for (const ele of parsed_notes) {
+      const obj = await getBlogFromSlug(ele.slug);
+      notesToSet.push({ ...obj, text: ele.lineData });
+    }
+    console.log("notestoSet",notesToSet)
+    setNotes(notesToSet);
+  };
+
+  const handleForm = async (e) => {
+    console.log("notes ", notes);
+
+    e.preventDefault();
+
+    const current_user = await authService.getCurrentUser();
+    await appwriteService.createUserData(current_user.$id, {
+      slug: current_slug,
+      lineData: note,
+    });
+
+    setNote("");
+    fetchData();
   };
 
   function timeAgo(timestamp) {
@@ -64,18 +78,27 @@ export default function Notes() {
       return `${days} day${days > 1 ? "s" : ""} ago`;
     }
   }
-
-  useEffect(() => {
-    const saved_notes = JSON.parse(localStorage.getItem("notes"));
-    if (saved_notes && saved_notes.length > 0) {
-      setNotes(saved_notes);
+  const fetchData = async () => {
+    try {
+      const current_user = await authService.getCurrentUser();
+      const db_notes = await appwriteService.getUserData(
+        current_user.$id,
+        "lines"
+      );
+      await initialiseNotes(db_notes);
+    } catch (error) {
+      console.error("Error fetching data:", error);
     }
-    console.log("yes");
+  };
+  useEffect(() => {
+  
+    console.log("mounted");
+    fetchData();
   }, []);
+
   useEffect(() => {
     scrollToBottom();
 
-    localStorage.setItem("notes", JSON.stringify(notes));
   }, [notes]);
 
   function scrollToBottom() {

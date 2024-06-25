@@ -49,12 +49,13 @@ export class Service {
     console.log("userID ", userID);
     console.log("lineData ", lineData);
     try {
-      const isPresent = await this.databases.getDocument(
+      const isPresent = await this.databases.listDocuments(
         conf.appWriteDatabaseID,
         conf.appWriteUsersCollectionID,
-        userID
+        [Query.equal("$id", userID)]
       );
-      if (!isPresent) {
+      console.log("isPrseent ", isPresent);
+      if (isPresent.documents.length <= 0) {
         return await this.databases.createDocument(
           conf.appWriteDatabaseID,
           conf.appWriteUsersCollectionID,
@@ -65,30 +66,33 @@ export class Service {
         );
       } else {
         console.log("exist : ", isPresent);
-        isPresent.lines.push(JSON.stringify(lineData));
-        const new_lines = isPresent.lines;
+        const existingDocument = isPresent.documents[0];
+        const updatedLines = [
+          ...existingDocument.lines,
+          JSON.stringify(lineData),
+        ];
         return await this.databases.updateDocument(
           conf.appWriteDatabaseID,
           conf.appWriteUsersCollectionID,
           userID,
           {
-            lines: new_lines,
+            lines: updatedLines,
           }
         );
       }
     } catch (error) {
-      console.log(error);
+      console.log("createUserData", error);
     }
   }
-  async getUserData(userID,attribute) {
-    const doc= await this.databases.getDocument(
+  async getUserData(userID, attribute) {
+    const doc = await this.databases.getDocument(
       conf.appWriteDatabaseID,
       conf.appWriteUsersCollectionID,
       userID
-    );
-    
-    if(attribute==="lines"){
-      return doc.lines
+    )
+
+    if (attribute === "lines") {
+      return doc.lines;
     }
   }
   async updatePost(slug, { title, content, featuredImage, status }) {
@@ -172,11 +176,12 @@ export class Service {
     }
   }
   getFilePreview(fileId) {
+    console.log("got fileid ",fileId)
     try {
       return this.bucket.getFilePreview(conf.appWriteBucketID, fileId);
     } catch (error) {
-      console.log(error);
-      return false;
+      console.log("getFilePreview ",error);
+      return "";
     }
   }
 }
