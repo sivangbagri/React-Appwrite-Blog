@@ -1,4 +1,11 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, {
+  memo,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { MdOutlineCancel } from "react-icons/md";
 import { Link, useLocation } from "react-router-dom";
 import appwriteService from "../appwrite/config";
@@ -6,45 +13,62 @@ import { AiOutlineToTop } from "react-icons/ai";
 import { useDispatch, useSelector } from "react-redux";
 import { toggleShow } from "../store/showSlice";
 import authService from "../appwrite/auth";
+import { ProgressBar } from "react-loader-spinner";
 
-export default function Notes() {
+const Notes = memo(() => {
   const dispatch = useDispatch();
   const location = useLocation();
   const notesContainerRef = useRef();
   const pathname = location.pathname;
-  const current_slug = location.pathname.substring(
-    pathname.lastIndexOf("/") + 1
+  const current_slug = useMemo(
+    () => location.pathname.substring(pathname.lastIndexOf("/") + 1),
+    [pathname]
   );
   //{"slug":"jee-fienf-enfief-jenfine-fenfe--f","lineData":"cool worling "}
   const [notes, setNotes] = useState([]);
   const [note, setNote] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [cache, setCache] = useState({});
 
-  const getBlogFromSlug = async (slug) => {
-    
-    const blog = await appwriteService.getPost(slug);
-    // console.log("blog== ",blog)
-    if (blog) {
-      const featuredImage = appwriteService.getFilePreview(blog.featuredImage);
-      return {
-        title: blog.title,
-        slug: blog.$id,
-        image: featuredImage,
-        timeAdded: Date.now(),
-        author: blog.author,
-      };
-    }
-  };
-  const initialiseNotes = async (db_notes) => {
-    const parsed_notes = db_notes.map((item) => JSON.parse(item));
-    // console.log("parsed_notes ", parsed_notes);
-    const notesToSet = [];
-    for (const ele of parsed_notes) {
-      const obj = await getBlogFromSlug(ele.slug);
-      notesToSet.push({ ...obj, text: ele.lineData });
-    }
-    console.log("notestoSet",notesToSet)
-    setNotes(notesToSet);
-  };
+  const getBlogFromSlug = useCallback(
+    async (slug) => {
+      if (cache[slug]) {
+        return cache[slug];
+      }
+      const blog = await appwriteService.getPost(slug);
+      // console.log("blog== ",blog)
+      if (blog) {
+        const featuredImage = appwriteService.getFilePreview(
+          blog.featuredImage
+        );
+        const blogData = {
+          title: blog.title,
+          slug: blog.$id,
+          image: featuredImage,
+          timeAdded: Date.now(),
+          author: blog.author,
+        };
+        setCache((prevCache) => ({ ...prevCache, [slug]: blogData }));
+        return blogData;
+      }
+    },
+    [cache]
+  );
+  const initialiseNotes = useCallback(
+    async (db_notes) => {
+      const parsed_notes = db_notes.map((item) => JSON.parse(item));
+      // console.log("parsed_notes ", parsed_notes);
+      const notesToSet = [];
+      for (const ele of parsed_notes) {
+        const obj = await getBlogFromSlug(ele.slug);
+        notesToSet.push({ ...obj, text: ele.lineData });
+      }
+      console.log("notestoSet", notesToSet);
+      setNotes(notesToSet);
+      setLoading(false);
+    },
+    [getBlogFromSlug]
+  );
 
   const handleForm = async (e) => {
     console.log("notes ", notes);
@@ -61,24 +85,8 @@ export default function Notes() {
     fetchData();
   };
 
-  function timeAgo(timestamp) {
-    const now = Date.now();
-    const seconds = Math.floor((now - timestamp) / 1000);
-
-    if (seconds < 60) {
-      return "just now";
-    } else if (seconds < 3600) {
-      const minutes = Math.floor(seconds / 60);
-      return `${minutes} minute${minutes > 1 ? "s" : ""} ago`;
-    } else if (seconds < 86400) {
-      const hours = Math.floor(seconds / 3600);
-      return `${hours} hour${hours > 1 ? "s" : ""} ago`;
-    } else {
-      const days = Math.floor(seconds / 86400);
-      return `${days} day${days > 1 ? "s" : ""} ago`;
-    }
-  }
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
+    setLoading(true);
     try {
       const current_user = await authService.getCurrentUser();
       const db_notes = await appwriteService.getUserData(
@@ -89,16 +97,14 @@ export default function Notes() {
     } catch (error) {
       console.error("Error fetching data:", error);
     }
-  };
+  }, [initialiseNotes]);
   useEffect(() => {
-  
     console.log("mounted");
     fetchData();
   }, []);
 
   useEffect(() => {
     scrollToBottom();
-
   }, [notes]);
 
   function scrollToBottom() {
@@ -142,6 +148,7 @@ export default function Notes() {
               <MdOutlineCancel />{" "}
             </button>
           </div>
+
           <div>
             {notes?.map((item, index) => {
               return (
@@ -183,25 +190,59 @@ export default function Notes() {
           </div>
           <form onSubmit={handleForm}>
             <div className="flex bottom-0 mt-4 text-black bg-white ">
-              <input
-                value={note}
-                onChange={(e) => {
-                  setNote(e.target.value);
-                }}
-                placeholder="Whats next ?"
-                className="peer h-full w-full border-b border-blue-gray-200 bg-transparent pt-4 pb-1.5 font-sans text-sm font-normal text-blue-gray-700 outline outline-0 transition-all placeholder-shown:border-blue-gray-200 focus:border-gray-500 focus:outline-0 disabled:border-0 disabled:bg-blue-gray-50 placeholder:opacity-0 focus:placeholder:opacity-100 "
-              />
-              <button
-                type="button"
-                onClick={scrollToTop}
-                className={`text-black mb-3 p-2 text-2xl fixed z-20 right-5  ont-thin rounded-md hover:opacity-75`}
-              >
-                <AiOutlineToTop />
-              </button>
+              {loading ? (
+                <ProgressBar
+                  visible={true}
+                  height="80"
+                  width="200"
+                  barColor="#525252"
+                  borderColor="#111827"
+                  ariaLabel="progress-bar-loading"
+                  wrapperClass="mx-auto"
+                />
+              ) : (
+                <>
+                  <input
+                    value={note}
+                    onChange={(e) => {
+                      setNote(e.target.value);
+                    }}
+                    placeholder="Whats next ?"
+                    className="peer h-full w-full border-b border-blue-gray-200 bg-transparent pt-4 pb-1.5 font-sans text-sm font-normal text-blue-gray-700 outline outline-0 transition-all placeholder-shown:border-blue-gray-200 focus:border-gray-500 focus:outline-0 disabled:border-0 disabled:bg-blue-gray-50 placeholder:opacity-0 focus:placeholder:opacity-100 "
+                  />
+
+                  <button
+                    type="button"
+                    onClick={scrollToTop}
+                    className={`text-black mb-3 p-2 text-2xl fixed z-20 right-5  ont-thin rounded-md hover:opacity-75`}
+                  >
+                    <AiOutlineToTop />
+                  </button>
+                </>
+              )}
             </div>
           </form>
         </div>
       )}
     </>
   );
+});
+
+export default Notes;
+function timeAgo(timestamp) {
+  const now = Date.now();
+  const seconds = Math.floor((now - timestamp) / 1000);
+
+  if (seconds < 60) {
+    return "just now";
+  } else if (seconds < 3600) {
+    const minutes = Math.floor(seconds / 60);
+    return `${minutes} minute${minutes > 1 ? "s" : ""} ago`;
+  } else if (seconds < 86400) {
+    const hours = Math.floor(seconds / 3600);
+    return `${hours} hour${hours > 1 ? "s" : ""} ago`;
+  } else {
+    const days = Math.floor(seconds / 86400);
+    return `${days} day${days > 1 ? "s" : ""} ago`;
+  }
 }
