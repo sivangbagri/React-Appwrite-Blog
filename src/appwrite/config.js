@@ -46,15 +46,13 @@ export class Service {
     }
   }
   async createUserData(userID, lineData) {
-    console.log("userID ", userID);
-    console.log("lineData ", lineData);
     try {
       const isPresent = await this.databases.listDocuments(
         conf.appWriteDatabaseID,
         conf.appWriteUsersCollectionID,
         [Query.equal("$id", userID)]
       );
-      console.log("isPrseent ", isPresent);
+      // console.log("isPrseent ", isPresent);
       if (isPresent.documents.length <= 0) {
         return await this.databases.createDocument(
           conf.appWriteDatabaseID,
@@ -65,7 +63,7 @@ export class Service {
           }
         );
       } else {
-        console.log("exist : ", isPresent);
+        // console.log("exist : ", isPresent);
         const existingDocument = isPresent.documents[0];
         const updatedLines = [
           ...existingDocument.lines,
@@ -84,6 +82,43 @@ export class Service {
       console.log("createUserData", error);
     }
   }
+  async createUserHistory(userID, historyData) {
+    try {
+      const isPresent = await this.databases.listDocuments(
+        conf.appWriteDatabaseID,
+        conf.appWriteUsersCollectionID,
+        [Query.equal("$id", userID)]
+      );
+      // console.log("isPrseent ", isPresent);
+      if (isPresent.documents.length <= 0) {
+        return await this.databases.createDocument(
+          conf.appWriteDatabaseID,
+          conf.appWriteUsersCollectionID,
+          userID,
+          {
+            lines: [JSON.stringify(historyData)],
+          }
+        );
+      } else {
+        // console.log("exist : ", isPresent);
+        const existingDocument = isPresent.documents[0];
+        const updatedHistory = [
+          ...existingDocument.history,
+          JSON.stringify(historyData),
+        ];
+        return await this.databases.updateDocument(
+          conf.appWriteDatabaseID,
+          conf.appWriteUsersCollectionID,
+          userID,
+          {
+            history: updatedHistory,
+          }
+        );
+      }
+    } catch (error) {
+      console.log("createUserHistory", error);
+    }
+  }
   async getUserData(userID, attribute) {
     const doc = await this.databases.getDocument(
       conf.appWriteDatabaseID,
@@ -93,6 +128,9 @@ export class Service {
 
     if (attribute === "lines") {
       return doc.lines;
+    }
+    if (attribute === "history") {
+      return doc.history;
     }
   }
   async updatePost(slug, { title, content, featuredImage, status }) {
@@ -126,7 +164,7 @@ export class Service {
     }
   }
   async getPost(slug) {
-    console.log("getpost", slug);
+    // console.log("getpost", slug);
     try {
       return await this.databases.getDocument(
         conf.appWriteDatabaseID,
@@ -176,7 +214,6 @@ export class Service {
     }
   }
   getFilePreview(fileId) {
-    console.log("got fileid ",fileId)
     try {
       return this.bucket.getFilePreview(conf.appWriteBucketID, fileId);
     } catch (error) {

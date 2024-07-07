@@ -7,6 +7,7 @@ import { login, logout } from "./store/authSlice";
 import { Footer, Header } from "./components";
 import { Outlet } from "react-router-dom";
 import Notes from "./components/Notes";
+import History from "./components/History";
 function App() {
   const isOpen = useSelector((state) => state.show.showLines);
   const [loading, setLoading] = useState(true);
@@ -28,7 +29,7 @@ function App() {
     <div className="min-h-screen flex flex-wrap content-between bg-[#0c0a09] ">
       <div className="w-full block">
         <Header />
-
+        <History/>
         {isOpen && <Notes />}
         <main>
           TODO: <Outlet />

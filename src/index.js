@@ -16,6 +16,7 @@ import EditPost from "./pages/EditPost";
 import Post from "./pages/Post";
 
 import AllPosts from "./pages/AllPosts";
+import HistoryPage from "./pages/HistoryPage";
 const root = ReactDOM.createRoot(document.getElementById("root"));
 const router = createBrowserRouter([
   {
@@ -24,7 +25,11 @@ const router = createBrowserRouter([
     children: [
       {
         path: "/",
-        element:( <AuthLayout authentication={false}><Home /></AuthLayout> )
+        element: (
+          <AuthLayout authentication={false}>
+            <Home />
+          </AuthLayout>
+        ),
       },
       {
         path: "/login",
@@ -73,14 +78,25 @@ const router = createBrowserRouter([
         path: "/post/:slug",
         element: <Post />,
       },
+      {
+        path: "/history",
+        element: (
+          <AuthLayout authentication>
+            {" "}
+            <HistoryPage />
+          </AuthLayout>
+        ),
+      },
     ],
   },
 ]);
 root.render(
   <React.StrictMode>
     <Provider store={store}>
-      <RouterProvider router={router}> <App /></RouterProvider>
-     
+      <RouterProvider router={router}>
+        {" "}
+        <App />
+      </RouterProvider>
     </Provider>
   </React.StrictMode>
 );

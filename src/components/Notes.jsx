@@ -36,7 +36,6 @@ const Notes = memo(() => {
         return cache[slug];
       }
       const blog = await appwriteService.getPost(slug);
-      // console.log("blog== ",blog)
       if (blog) {
         const featuredImage = appwriteService.getFilePreview(
           blog.featuredImage
@@ -57,7 +56,6 @@ const Notes = memo(() => {
   const initialiseNotes = useCallback(
     async (db_notes) => {
       const parsed_notes = db_notes.map((item) => JSON.parse(item));
-      // console.log("parsed_notes ", parsed_notes);
       const notesToSet = [];
       for (const ele of parsed_notes) {
         const obj = await getBlogFromSlug(ele.slug);
@@ -71,6 +69,7 @@ const Notes = memo(() => {
   );
 
   const handleForm = async (e) => {
+    setLoading(true);
     console.log("notes ", notes);
 
     e.preventDefault();
@@ -99,7 +98,6 @@ const Notes = memo(() => {
     }
   }, [initialiseNotes]);
   useEffect(() => {
-    console.log("mounted");
     fetchData();
   }, []);
 
@@ -229,6 +227,7 @@ const Notes = memo(() => {
 });
 
 export default Notes;
+// export const {getBlogFromSlug} 
 function timeAgo(timestamp) {
   const now = Date.now();
   const seconds = Math.floor((now - timestamp) / 1000);
